@@ -56,7 +56,6 @@ import slash.navigation.converter.gui.helper.ShowProfileMenu;
 import slash.navigation.converter.gui.helper.SinglePositionAugmenter;
 import slash.navigation.converter.gui.helper.UndoMenuSynchronizer;
 import slash.navigation.converter.gui.mapview.EclipseSWTMapView;
-import slash.navigation.converter.gui.mapview.JavaFXWebViewMapView;
 import slash.navigation.converter.gui.mapview.MapView;
 import slash.navigation.converter.gui.mapview.MapViewListener;
 import slash.navigation.converter.gui.mapview.TravelMode;
@@ -133,6 +132,7 @@ import static slash.common.io.Files.toUrls;
 import static slash.common.system.Platform.getJava;
 import static slash.common.system.Platform.getMaximumMemory;
 import static slash.common.system.Platform.getPlatform;
+import static slash.common.system.Platform.isCurrentAtLeastMinimumVersion;
 import static slash.common.system.Platform.isJavaFX;
 import static slash.common.system.Version.parseVersionFromManifest;
 import static slash.feature.client.Feature.initializePreferences;
@@ -324,11 +324,9 @@ public class RouteConverter extends SingleFrameApplication {
 
         if (isJavaFX()) {
             try {
-                // mapView = (MapView) Class.forName("slash.navigation.converter.gui.mapview.JavaFXWebViewMapView").newInstance();
-                mapView = new JavaFXWebViewMapView();
+                mapView = (MapView) Class.forName("slash.navigation.converter.gui.mapview.JavaFXWebViewMapView").newInstance();
             } catch (Exception e) {
-                e.printStackTrace();
-                log.severe("Cannot create JavaFXWebViewMapView: " + e.getMessage());
+                log.severe("Cannot create JavaFXWebViewMapView: " + e);
             }
         }
         if (mapView == null)
