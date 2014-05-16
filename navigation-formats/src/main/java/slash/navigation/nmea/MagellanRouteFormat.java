@@ -20,6 +20,7 @@
 
 package slash.navigation.nmea;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.navigation.common.NavigationPosition;
 import slash.navigation.base.RouteCharacteristics;
 import slash.navigation.common.ValueAndOrientation;
@@ -56,7 +57,7 @@ public class MagellanRouteFormat extends BaseNmeaFormat {
     static {
         log = Logger.getLogger(MagellanRouteFormat.class.getName());
     }
-    private static final Preferences preferences = Preferences.userNodeForPackage(MagellanRouteFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(MagellanRouteFormat.class);
 
     private static final NumberFormat LONGITUDE_NUMBER_FORMAT = DecimalFormat.getNumberInstance(Locale.US);
     private static final NumberFormat LATITUDE_NUMBER_FORMAT = DecimalFormat.getNumberInstance(Locale.US);

@@ -20,6 +20,7 @@
 
 package slash.navigation.gopal;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.common.NavigationPosition;
 import slash.navigation.base.ParserContext;
@@ -28,6 +29,7 @@ import slash.navigation.gopal.binding3.ObjectFactory;
 import slash.navigation.gopal.binding3.Tour;
 
 import javax.xml.bind.JAXBException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -45,7 +47,7 @@ import static slash.navigation.gopal.GoPalUtil.unmarshal3;
  */
 
 public class GoPal3RouteFormat extends GoPalRouteFormat<GoPalRoute> {
-    private static final Preferences preferences = Preferences.userNodeForPackage(GoPal3RouteFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(GoPal3RouteFormat.class);
     private static final String VERSION_PREFIX = "v3";
 
     public String getName() {

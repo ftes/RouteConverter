@@ -20,6 +20,7 @@
 
 package slash.navigation.url;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.navigation.base.*;
 
 import java.io.IOException;
@@ -46,7 +47,7 @@ import static slash.navigation.base.RouteCharacteristics.Route;
  */
 
 public class MotoPlanerUrlFormat extends BaseUrlParsingFormat {
-    private static final Preferences preferences = Preferences.userNodeForPackage(MotoPlanerUrlFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(MotoPlanerUrlFormat.class);
     private static final Pattern URL_PATTERN = Pattern.compile(".*http[s]?://www.motoplaner.de/#([^\\s]+).*");
 
     public String getExtension() {

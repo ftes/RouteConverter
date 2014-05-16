@@ -20,6 +20,7 @@
 
 package slash.navigation.babel;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.base.BaseNavigationFormat;
 import slash.navigation.base.ParserContext;
@@ -54,7 +55,7 @@ import static slash.navigation.base.RouteCharacteristics.*;
 
 public abstract class BabelFormat extends BaseNavigationFormat<GpxRoute> {
     private static final Logger log = Logger.getLogger(BabelFormat.class.getName());
-    private static final Preferences preferences = Preferences.userNodeForPackage(BabelFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(BabelFormat.class);
     private static final String BABEL_PATH_PREFERENCE = "babelPath";
     private static final String BABEL_INTERFACE_FORMAT_NAME = "gpx";
     private static final String[] ROUTE_WAYPOINTS_TRACKS = new String[]{"-r", "-w", "-t"};

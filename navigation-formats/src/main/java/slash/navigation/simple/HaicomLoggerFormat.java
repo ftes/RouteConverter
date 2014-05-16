@@ -20,6 +20,7 @@
 
 package slash.navigation.simple;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.base.RouteCharacteristics;
 import slash.navigation.base.SimpleLineBasedFormat;
@@ -56,7 +57,7 @@ import static slash.navigation.common.NavigationConversion.formatSpeedAsString;
  */
 
 public class HaicomLoggerFormat extends SimpleLineBasedFormat<SimpleRoute> {
-    private static final Preferences preferences = Preferences.userNodeForPackage(HaicomLoggerFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(HaicomLoggerFormat.class);
 
     private static final String SEPARATOR = ",";
     private static final String HEADER_LINE = "INDEX,RCR,DATE,TIME,LATITUDE,N/S,LONGITUDE,E/W,ALTITUDE,COURSE,SPEED,";

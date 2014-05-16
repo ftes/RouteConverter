@@ -20,6 +20,7 @@
 
 package slash.navigation.gopal;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.common.NavigationPosition;
 import slash.navigation.base.ParserContext;
@@ -28,6 +29,7 @@ import slash.navigation.gopal.binding5.ObjectFactory;
 import slash.navigation.gopal.binding5.Tour;
 
 import javax.xml.bind.JAXBException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,7 +49,7 @@ import static slash.navigation.gopal.GoPalUtil.unmarshal5;
  */
 
 public class GoPal5RouteFormat extends GoPalRouteFormat<GoPalRoute> {
-    private static final Preferences preferences = Preferences.userNodeForPackage(GoPal5RouteFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(GoPal5RouteFormat.class);
     private static final String ROUTE_OPTIONS_SPEED_UNIT = "km_h";
     private static final String VERSION_PREFIX = "v5";
 

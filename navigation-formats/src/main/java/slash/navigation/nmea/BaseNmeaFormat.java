@@ -20,6 +20,7 @@
 
 package slash.navigation.nmea;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.base.ParserContext;
 import slash.navigation.base.RouteCharacteristics;
@@ -57,7 +58,7 @@ import static slash.navigation.base.RouteCharacteristics.Track;
  */
 
 public abstract class BaseNmeaFormat extends SimpleFormat<NmeaRoute> {
-    private static final Preferences preferences = Preferences.userNodeForPackage(BaseNmeaFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(BaseNmeaFormat.class);
     protected static Logger log = Logger.getLogger(BaseNmeaFormat.class.getName());
 
     static final char SEPARATOR = ',';

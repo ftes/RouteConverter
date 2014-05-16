@@ -20,6 +20,7 @@
 
 package slash.navigation.kml;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.base.ParserContext;
 import slash.navigation.kml.binding22.DocumentType;
@@ -44,7 +45,7 @@ import static slash.common.io.Transfer.trim;
  */
 
 public class Igo8RouteFormat extends Kml22Format {
-    private static final Preferences preferences = Preferences.userNodeForPackage(Igo8RouteFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(Igo8RouteFormat.class);
     private static final String IGO_ROUTE = "iGO-Route";
 
     public String getName() {

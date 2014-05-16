@@ -20,6 +20,7 @@
 
 package slash.navigation.base;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.io.Transfer;
 import slash.common.type.CompactCalendar;
 import slash.navigation.common.LongitudeAndLatitude;
@@ -45,7 +46,7 @@ import static slash.common.type.CompactCalendar.parseDate;
  * @author Christian Pesch
  */
 public abstract class RouteComments {
-    private static final Preferences preferences = Preferences.userNodeForPackage(RouteComments.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(RouteComments.class);
     private static final String MAXIMUM_ROUTE_NAME_MENU_TEXT_LENGTH_PREFERENCE = "maximumRouteNameMenuTextLength";
 
     public static String shortenRouteName(BaseRoute route) {

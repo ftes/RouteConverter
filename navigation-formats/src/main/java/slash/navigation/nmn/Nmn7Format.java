@@ -20,6 +20,7 @@
 
 package slash.navigation.nmn;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.base.ParserContext;
 import slash.navigation.base.Wgs84Position;
@@ -27,6 +28,7 @@ import slash.navigation.nmn.binding7.ObjectFactory;
 import slash.navigation.nmn.binding7.Route;
 
 import javax.xml.bind.JAXBException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,7 +49,7 @@ import static slash.navigation.nmn.Nmn7Util.unmarshal;
  */
 
 public class Nmn7Format extends NmnFormat {
-    private static final Preferences preferences = Preferences.userNodeForPackage(Nmn7Format.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(Nmn7Format.class);
 
     public String getExtension() {
         return ".freshroute";

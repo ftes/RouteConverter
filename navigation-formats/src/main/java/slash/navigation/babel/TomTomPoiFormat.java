@@ -20,6 +20,7 @@
 
 package slash.navigation.babel;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.navigation.gpx.Gpx10Format;
 import slash.navigation.itn.TomTomRouteFormat;
 
@@ -32,7 +33,7 @@ import java.util.prefs.Preferences;
  */
 
 public class TomTomPoiFormat extends BabelFormat {
-    private static final Preferences preferences = Preferences.userNodeForPackage(TomTomRouteFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(TomTomRouteFormat.class);
 
     public String getName() {
         return "Tom Tom POI (*" + getExtension() + ")";

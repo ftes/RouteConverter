@@ -20,6 +20,7 @@
 
 package slash.navigation.kml;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.common.type.ISO8601;
 import slash.navigation.common.NavigationPosition;
@@ -57,7 +58,7 @@ import static slash.navigation.common.PositionParser.parsePositions;
  */
 
 public abstract class KmlFormat extends BaseKmlFormat {
-    static final Preferences preferences = Preferences.userNodeForPackage(KmlFormat.class);
+    static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(KmlFormat.class);
 
     static final String WAYPOINTS = "Waypoints";
     static final String ROUTE = "Route";

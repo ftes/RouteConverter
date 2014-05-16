@@ -22,6 +22,8 @@ package slash.navigation.tcx;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.navigation.base.MultipleRoutesFormat;
 import slash.navigation.common.NavigationPosition;
 import slash.navigation.base.RouteCharacteristics;
@@ -44,7 +46,7 @@ import static slash.common.io.Transfer.trim;
  */
 
 public abstract class TcxFormat extends XmlNavigationFormat<TcxRoute> implements MultipleRoutesFormat<TcxRoute> {
-    private static final Preferences preferences = Preferences.userNodeForPackage(TcxFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(TcxFormat.class);
 
     public String getExtension() {
         return ".tcx";

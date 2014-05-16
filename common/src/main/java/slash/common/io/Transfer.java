@@ -20,11 +20,23 @@
 
 package slash.common.io;
 
-import slash.common.type.CompactCalendar;
+import static java.lang.Double.POSITIVE_INFINITY;
+import static java.lang.Integer.toHexString;
+import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
+import static java.lang.Math.log;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.pow;
+import static java.lang.Math.round;
+import static java.util.Calendar.DATE;
+import static java.util.Calendar.HOUR_OF_DAY;
+import static java.util.Calendar.MILLISECOND;
+import static java.util.Calendar.MINUTE;
+import static java.util.Calendar.MONTH;
+import static java.util.Calendar.SECOND;
+import static java.util.Calendar.YEAR;
 
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -32,14 +44,20 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Locale;
+import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
-import static java.lang.Double.POSITIVE_INFINITY;
-import static java.lang.Integer.toHexString;
-import static java.lang.Math.*;
-import static java.util.Calendar.*;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import slash.common.helpers.RouteConverterPreferencesFactory;
+import slash.common.type.CompactCalendar;
 
 /**
  * Provides value transfer functionality.
@@ -50,7 +68,7 @@ import static java.util.Calendar.*;
 public class Transfer {
     private Transfer() {}
 
-    private static final Preferences preferences = Preferences.userNodeForPackage(Transfer.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(Transfer.class);
     private static final Logger log = Logger.getLogger(Transfer.class.getName());
     public static final String ISO_LATIN1_ENCODING = "ISO-8859-1";
     public static final String UTF8_ENCODING = "UTF-8";

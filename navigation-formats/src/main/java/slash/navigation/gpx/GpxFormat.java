@@ -20,6 +20,7 @@
 
 package slash.navigation.gpx;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.navigation.base.MultipleRoutesFormat;
 import slash.navigation.common.NavigationPosition;
 import slash.navigation.base.RouteCharacteristics;
@@ -41,7 +42,7 @@ import static slash.navigation.common.UnitConversion.msToKmh;
  */
 
 public abstract class GpxFormat extends XmlNavigationFormat<GpxRoute> implements MultipleRoutesFormat<GpxRoute> {
-    private static final Preferences preferences = Preferences.userNodeForPackage(GpxFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(GpxFormat.class);
     static final Pattern TRIPMASTER_REASON_PATTERN = Pattern.compile("(Punkt|Richtung \\d+|Abstand \\d+|Dur. \\d+:\\d+:\\d+|Course \\d+|Dist. \\d+) (-|:) (.+)");
     private static final Pattern TRIPMASTER_SPEED_PATTERN = Pattern.compile("[^-\\d\\.]*([-\\d\\.]+)\\s*(K|k)m/h.*");
     private static final Pattern QSTARTZ_SPEED_PATTERN = Pattern.compile(".*Speed[^-\\d\\.]*([-\\d\\.]+)(K|k)m/h.*Course[^\\d\\.]*([\\d]+).*");

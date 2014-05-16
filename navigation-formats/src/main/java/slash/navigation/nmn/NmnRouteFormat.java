@@ -20,6 +20,7 @@
 
 package slash.navigation.nmn;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.common.NavigationPosition;
 import slash.navigation.base.ParserContext;
@@ -56,7 +57,7 @@ import static slash.navigation.base.RouteCharacteristics.Route;
  */
 
 public class NmnRouteFormat extends SimpleFormat<Wgs84Route> {
-    private static final Preferences preferences = Preferences.userNodeForPackage(NmnRouteFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(NmnRouteFormat.class);
     private static final Logger log = Logger.getLogger(NmnRouteFormat.class.getName());
     public static final int START_BYTES = 0xFFFF;
     public static final long UNKNOWN_START_BYTES = 1L;

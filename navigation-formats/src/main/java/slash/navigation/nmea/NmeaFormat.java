@@ -20,6 +20,7 @@
 
 package slash.navigation.nmea;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.common.NavigationPosition;
 import slash.navigation.base.RouteCharacteristics;
@@ -56,7 +57,7 @@ public class NmeaFormat extends BaseNmeaFormat {
     static {
         log = Logger.getLogger(NmeaFormat.class.getName());
     }
-    private static final Preferences preferences = Preferences.userNodeForPackage(NmeaFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(NmeaFormat.class);
 
     private static final NumberFormat ALTITUDE_AND_SPEED_NUMBER_FORMAT = DecimalFormat.getNumberInstance(US);
     static {

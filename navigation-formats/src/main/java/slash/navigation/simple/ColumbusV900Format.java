@@ -20,6 +20,7 @@
 
 package slash.navigation.simple;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.common.NavigationPosition;
 import slash.navigation.base.RouteCharacteristics;
@@ -47,7 +48,7 @@ import static slash.navigation.base.RouteCharacteristics.Track;
  */
 
 public abstract class ColumbusV900Format extends SimpleLineBasedFormat<SimpleRoute> {
-    private static final Preferences preferences = Preferences.userNodeForPackage(ColumbusV900Format.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(ColumbusV900Format.class);
     protected static final Logger log = Logger.getLogger(ColumbusV900Format.class.getName());
 
     protected static final char SEPARATOR = ',';

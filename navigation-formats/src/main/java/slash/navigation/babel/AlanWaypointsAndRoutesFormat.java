@@ -20,6 +20,7 @@
 
 package slash.navigation.babel;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.navigation.base.MultipleRoutesFormat;
 import slash.navigation.gpx.GpxRoute;
 
@@ -32,7 +33,7 @@ import java.util.prefs.Preferences;
  */
 
 public class AlanWaypointsAndRoutesFormat extends BabelFormat implements MultipleRoutesFormat<GpxRoute> {
-    private static final Preferences preferences = Preferences.userNodeForPackage(AlanWaypointsAndRoutesFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(AlanWaypointsAndRoutesFormat.class);
 
     public String getExtension() {
         return ".wpr";

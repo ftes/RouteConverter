@@ -20,6 +20,7 @@
 
 package slash.navigation.bcr;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.base.IniFileFormat;
 import slash.navigation.common.NavigationPosition;
@@ -49,7 +50,7 @@ import static slash.navigation.bcr.BcrPosition.NO_ALTITUDE_DEFINED;
 
 public abstract class BcrFormat extends IniFileFormat<BcrRoute> {
     private static final Logger log = Logger.getLogger(BcrFormat.class.getName());
-    private static final Preferences preferences = Preferences.userNodeForPackage(BcrFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(BcrFormat.class);
 
     static final String CLIENT_TITLE = "CLIENT";
     static final String COORDINATES_TITLE = "COORDINATES";

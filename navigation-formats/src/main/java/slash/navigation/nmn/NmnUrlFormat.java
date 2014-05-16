@@ -20,6 +20,7 @@
 
 package slash.navigation.nmn;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.navigation.base.BaseUrlParsingFormat;
 import slash.navigation.base.Wgs84Position;
 import slash.navigation.base.Wgs84Route;
@@ -42,7 +43,7 @@ import static slash.navigation.base.RouteCalculations.asWgs84Position;
  */
 
 public class NmnUrlFormat extends BaseUrlParsingFormat {
-    private static final Preferences preferences = Preferences.userNodeForPackage(NmnUrlFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(NmnUrlFormat.class);
     private static final Pattern URL_PATTERN = Pattern.compile(".*navigon.*://route/\\?([^\\s|\"]+).*");
     private static final Pattern COORDINATE_PATTERN = Pattern.compile("coordinate//(" + POSITION + ")/(" + POSITION + ")");
     private static final Pattern ADDRESS_PATTERN = Pattern.compile("address//[^/]*/([^/]*)/([^/]*)/([^/]*)/([^/]*)/" +

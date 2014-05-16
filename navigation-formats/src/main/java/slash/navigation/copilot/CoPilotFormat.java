@@ -20,6 +20,7 @@
 
 package slash.navigation.copilot;
 
+import slash.common.helpers.RouteConverterPreferencesFactory;
 import slash.common.type.CompactCalendar;
 import slash.navigation.base.BaseNavigationFormat;
 import slash.navigation.base.BaseNavigationPosition;
@@ -55,7 +56,7 @@ import static slash.navigation.base.RouteCharacteristics.Route;
  */
 
 public abstract class CoPilotFormat extends SimpleFormat<Wgs84Route> {
-    private static final Preferences preferences = Preferences.userNodeForPackage(CoPilotFormat.class);
+    private static final Preferences preferences = RouteConverterPreferencesFactory.userNodeForPackage(CoPilotFormat.class);
     protected static final String DATA_VERSION = "Data Version";
     private static final String START_TRIP = "Start Trip";
     private static final String END_TRIP = "End Trip";
