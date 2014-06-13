@@ -25,26 +25,52 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import slash.common.log.LoggingHelper;
 import slash.common.system.Platform;
 import slash.common.system.Version;
-import slash.common.type.CompactCalendar;
 import slash.navigation.babel.BabelException;
 import slash.navigation.base.RouteCharacteristics;
 import slash.navigation.common.NavigationPosition;
 import slash.navigation.common.NumberPattern;
 import slash.navigation.common.SimpleNavigationPosition;
-import slash.navigation.converter.gui.actions.*;
+import slash.navigation.converter.gui.actions.CheckForUpdateAction;
+import slash.navigation.converter.gui.actions.CompleteFlightPlanAction;
+import slash.navigation.converter.gui.actions.ConvertRouteToTrackAction;
+import slash.navigation.converter.gui.actions.ConvertTrackToRouteAction;
+import slash.navigation.converter.gui.actions.DeletePositionsAction;
+import slash.navigation.converter.gui.actions.FindPlaceAction;
+import slash.navigation.converter.gui.actions.InsertPositionsAction;
+import slash.navigation.converter.gui.actions.MoveSplitPaneDividersAction;
+import slash.navigation.converter.gui.actions.RevertPositionListAction;
+import slash.navigation.converter.gui.actions.SendErrorReportAction;
+import slash.navigation.converter.gui.actions.ShowAboutAction;
+import slash.navigation.converter.gui.actions.ShowDownloadsAction;
+import slash.navigation.converter.gui.actions.ShowOptionsAction;
 import slash.navigation.converter.gui.dnd.PanelDropHandler;
-import slash.navigation.converter.gui.helpers.*;
-import slash.navigation.converter.gui.mapview.BaseMapView;
+import slash.navigation.converter.gui.helpers.BatchPositionAugmenter;
+import slash.navigation.converter.gui.helpers.ElevationServiceFacade;
+import slash.navigation.converter.gui.helpers.FrameMenu;
+import slash.navigation.converter.gui.helpers.GoogleDirections;
+import slash.navigation.converter.gui.helpers.InsertPositionFacade;
+import slash.navigation.converter.gui.helpers.MapViewCallbackImpl;
+import slash.navigation.converter.gui.helpers.MergePositionListMenu;
+import slash.navigation.converter.gui.helpers.ReopenMenuSynchronizer;
+import slash.navigation.converter.gui.helpers.RouteServiceOperator;
+import slash.navigation.converter.gui.helpers.RoutingServiceFacade;
+import slash.navigation.converter.gui.helpers.UndoMenuSynchronizer;
+import slash.navigation.converter.gui.helpers.UpdateChecker;
 import slash.navigation.converter.gui.mapview.MapView;
 import slash.navigation.converter.gui.mapview.MapViewCallback;
 import slash.navigation.converter.gui.mapview.MapViewListener;
-import slash.navigation.converter.gui.models.*;
+import slash.navigation.converter.gui.models.PositionsModel;
+import slash.navigation.converter.gui.models.PositionsSelectionModel;
+import slash.navigation.converter.gui.models.ProfileModeModel;
+import slash.navigation.converter.gui.models.RecentUrlsModel;
+import slash.navigation.converter.gui.models.UnitSystemModel;
 import slash.navigation.converter.gui.panels.BrowsePanel;
 import slash.navigation.converter.gui.panels.ConvertPanel;
 import slash.navigation.converter.gui.panels.PanelInTab;
 import slash.navigation.converter.gui.profileview.ProfileModeMenu;
 import slash.navigation.converter.gui.profileview.ProfileView;
 import slash.navigation.download.DownloadManager;
+import slash.navigation.download.datasources.DataSourceManager;
 import slash.navigation.feedback.domain.RouteFeedback;
 import slash.navigation.gui.Application;
 import slash.navigation.gui.SingleFrameApplication;
@@ -70,33 +96,66 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EventObject;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
-import static com.intellij.uiDesigner.core.GridConstraints.*;
+import static com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER;
+import static com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH;
+import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW;
+import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK;
 import static java.awt.event.KeyEvent.VK_F1;
 import static java.awt.event.KeyEvent.VK_HELP;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Arrays.asList;
-import static java.util.Locale.*;
+import static java.util.Locale.CHINA;
+import static java.util.Locale.FRANCE;
+import static java.util.Locale.GERMANY;
+import static java.util.Locale.ITALY;
+import static java.util.Locale.US;
 import static javax.help.CSH.setHelpIDString;
 import static javax.swing.JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT;
-import static javax.swing.JOptionPane.*;
+import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.QUESTION_MESSAGE;
+import static javax.swing.JOptionPane.WARNING_MESSAGE;
+import static javax.swing.JOptionPane.showMessageDialog;
 import static javax.swing.JSplitPane.DIVIDER_LOCATION_PROPERTY;
 import static javax.swing.KeyStroke.getKeyStroke;
 import static javax.swing.SwingUtilities.invokeLater;
 import static slash.common.io.Directories.getTemporaryDirectory;
-import static slash.common.io.Files.*;
-import static slash.common.system.Platform.*;
+import static slash.common.io.Files.findExistingPath;
+import static slash.common.io.Files.printArrayToDialogString;
+import static slash.common.io.Files.shortenPath;
+import static slash.common.io.Files.toUrls;
+import static slash.common.system.Platform.getJava;
+import static slash.common.system.Platform.getMaximumMemory;
+import static slash.common.system.Platform.getPlatform;
+import static slash.common.system.Platform.isCurrentAtLeastMinimumVersion;
 import static slash.common.system.Version.parseVersionFromManifest;
 import static slash.feature.client.Feature.initializePreferences;
 import static slash.navigation.common.NumberPattern.Number_Space_Then_Description;
 import static slash.navigation.converter.gui.helpers.ExternalPrograms.startBrowserForJava;
 import static slash.navigation.converter.gui.helpers.ExternalPrograms.startMail;
 import static slash.navigation.gui.helpers.JMenuHelper.findMenuComponent;
-import static slash.navigation.gui.helpers.UIHelper.*;
+import static slash.navigation.gui.helpers.UIHelper.CROATIA;
+import static slash.navigation.gui.helpers.UIHelper.CZECH;
+import static slash.navigation.gui.helpers.UIHelper.NEDERLANDS;
+import static slash.navigation.gui.helpers.UIHelper.POLAND;
+import static slash.navigation.gui.helpers.UIHelper.RUSSIA;
+import static slash.navigation.gui.helpers.UIHelper.SERBIA;
+import static slash.navigation.gui.helpers.UIHelper.SLOVAKIA;
+import static slash.navigation.gui.helpers.UIHelper.SPAIN;
+import static slash.navigation.gui.helpers.UIHelper.patchUIManager;
+import static slash.navigation.gui.helpers.UIHelper.startWaitCursor;
+import static slash.navigation.gui.helpers.UIHelper.stopWaitCursor;
 
 /**
  * A small graphical user interface for the route conversion.
@@ -126,7 +185,11 @@ public class RouteConverter extends SingleFrameApplication {
 
     public static String getTitle() {
         Version version = parseVersionFromManifest();
-        return MessageFormat.format(getBundle().getString("title"), version.getVersion(), version.getDate());
+        return MessageFormat.format(getBundle().getString("title"), getEdition(), version.getVersion(), version.getDate());
+    }
+
+    public static String getEdition() {
+        return "Online";
     }
 
     private static String getRouteConverter() {
@@ -159,6 +222,7 @@ public class RouteConverter extends SingleFrameApplication {
     private RouteServiceOperator routeServiceOperator;
     private UpdateChecker updateChecker;
     private DownloadManager downloadManager = new DownloadManager(getDownloadQueueFile());
+    private DataSourceManager dataSourceManager = new DataSourceManager(downloadManager);
     private ElevationServiceFacade elevationServiceFacade = new ElevationServiceFacade(downloadManager);
     private RoutingServiceFacade routingServiceFacade = new RoutingServiceFacade();
     private InsertPositionFacade insertPositionFacade = new InsertPositionFacade();
@@ -396,6 +460,7 @@ public class RouteConverter extends SingleFrameApplication {
             mapView.dispose();
         getConvertPanel().dispose();
         getElevationServiceFacade().dispose();
+        getBatchPositionAugmenter().dispose();
         getDownloadManager().dispose();
         getDownloadManager().saveQueue();
         super.shutdown();
@@ -648,6 +713,10 @@ public class RouteConverter extends SingleFrameApplication {
         return downloadManager;
     }
 
+    public DataSourceManager getDataSourceManager() {
+        return dataSourceManager;
+    }
+
     private File getDownloadQueueFile() {
         return new File(getTemporaryDirectory(), "download-queue.xml");
     }
@@ -656,7 +725,7 @@ public class RouteConverter extends SingleFrameApplication {
 
     public synchronized BatchPositionAugmenter getBatchPositionAugmenter() {
         if (batchPositionAugmenter == null) {
-            batchPositionAugmenter = new BatchPositionAugmenter(frame);
+            batchPositionAugmenter = new BatchPositionAugmenter(getPositionsView(), getPositionsModel(), frame);
         }
         return batchPositionAugmenter;
     }
@@ -664,11 +733,6 @@ public class RouteConverter extends SingleFrameApplication {
     private MapViewCallback getMapViewCallback() {
         return mapViewCallback;
     }
-
-    public void complementTime(int row, CompactCalendar time, boolean allowCurrentTime) {
-        getMapViewCallback().complementTime(row, time, allowCurrentTime);
-    }
-
 
     public JTable getPositionsView() {
         return getConvertPanel().getPositionsView();
@@ -1003,6 +1067,19 @@ public class RouteConverter extends SingleFrameApplication {
         new Thread(new Runnable() {
             public void run() {
                 getDownloadManager().loadQueue();
+                /*
+                try {
+                    getDataSourceManager().initialize(getEdition());
+                } catch (final Exception e) {
+                    invokeLater(new Runnable() {
+                        public void run() {
+                            showMessageDialog(frame,
+                                    MessageFormat.format(getBundle().getString("datasource-error"), e), frame.getTitle(),
+                                    ERROR_MESSAGE);
+                        }
+                    });
+                }
+                */
             }
         }, "DownloadManagerInitializer").start();
     }

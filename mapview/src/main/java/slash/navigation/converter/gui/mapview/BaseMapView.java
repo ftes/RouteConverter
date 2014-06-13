@@ -29,21 +29,40 @@ import slash.navigation.common.NavigationPosition;
 import slash.navigation.common.PositionPair;
 import slash.navigation.common.SimpleNavigationPosition;
 import slash.navigation.converter.gui.models.CharacteristicsModel;
+import slash.navigation.converter.gui.models.PositionColumnValues;
 import slash.navigation.converter.gui.models.PositionsModel;
 import slash.navigation.converter.gui.models.PositionsSelectionModel;
 import slash.navigation.converter.gui.models.UnitSystemModel;
 import slash.navigation.nmn.NavigatingPoiWarnerFormat;
 
 import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Random;
+import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
@@ -56,19 +75,36 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.Thread.sleep;
+import static java.util.Arrays.asList;
 import static java.util.Calendar.SECOND;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static javax.swing.SwingUtilities.invokeLater;
 import static javax.swing.event.ListDataEvent.CONTENTS_CHANGED;
-import static javax.swing.event.TableModelEvent.*;
+import static javax.swing.event.TableModelEvent.ALL_COLUMNS;
+import static javax.swing.event.TableModelEvent.DELETE;
+import static javax.swing.event.TableModelEvent.INSERT;
+import static javax.swing.event.TableModelEvent.UPDATE;
 import static slash.common.helpers.ThreadHelper.safeJoin;
-import static slash.common.io.Transfer.*;
+import static slash.common.io.Transfer.UTF8_ENCODING;
+import static slash.common.io.Transfer.ceiling;
+import static slash.common.io.Transfer.decodeUri;
+import static slash.common.io.Transfer.isEmpty;
+import static slash.common.io.Transfer.parseDouble;
+import static slash.common.io.Transfer.parseInt;
+import static slash.common.io.Transfer.trim;
 import static slash.common.type.CompactCalendar.fromCalendar;
-import static slash.navigation.base.RouteCharacteristics.*;
+import static slash.navigation.base.RouteCharacteristics.Route;
+import static slash.navigation.base.RouteCharacteristics.Track;
+import static slash.navigation.base.RouteCharacteristics.Waypoints;
 import static slash.navigation.converter.gui.models.CharacteristicsModel.IGNORE;
-import static slash.navigation.converter.gui.models.PositionColumns.*;
+import static slash.navigation.converter.gui.models.PositionColumns.DATE_TIME_COLUMN_INDEX;
+import static slash.navigation.converter.gui.models.PositionColumns.DESCRIPTION_COLUMN_INDEX;
+import static slash.navigation.converter.gui.models.PositionColumns.ELEVATION_COLUMN_INDEX;
+import static slash.navigation.converter.gui.models.PositionColumns.LATITUDE_COLUMN_INDEX;
+import static slash.navigation.converter.gui.models.PositionColumns.LONGITUDE_COLUMN_INDEX;
+import static slash.navigation.gui.events.Range.asRange;
 import static slash.navigation.gui.helpers.JTableHelper.isFirstToLastRow;
 
 /**
@@ -86,7 +122,6 @@ public abstract class BaseMapView implements MapView {
     private static final String COMPLEMENT_ELEVATION_ON_MOVE_PREFERENCE = "complementElevationOnMove";
     private static final String CLEAN_TIME_ON_MOVE_PREFERENCE = "cleanTimeOnMove";
     private static final String COMPLEMENT_TIME_ON_MOVE_PREFERENCE = "complementTimeOnMove";
-    private static final String COMPLEMENT_TIME_FALLBACK = "complementTimeFallback";
     private static final String MOVE_COMPLETE_SELECTION_PREFERENCE = "moveCompleteSelection";
     private static final String CENTER_LATITUDE_PREFERENCE = "centerLatitude";
     private static final String CENTER_LONGITUDE_PREFERENCE = "centerLongitude";
@@ -115,7 +150,7 @@ public abstract class BaseMapView implements MapView {
     private MapViewCallback mapViewCallback;
     private PositionReducer positionReducer;
     private final ExecutorService executor = newCachedThreadPool();
-    private int overQueryLimitCount = 0;
+    private int overQueryLimitCount = 0, zeroResultsCount = 0;
 
     // initialization
 
@@ -1109,6 +1144,7 @@ public abstract class BaseMapView implements MapView {
     private static final Pattern CENTER_CHANGED_PATTERN = Pattern.compile("^center-changed/(.*)/(.*)$");
     private static final Pattern CALLBACK_PORT_PATTERN = Pattern.compile("^callback-port/(\\d+)$");
     private static final Pattern OVER_QUERY_LIMIT_PATTERN = Pattern.compile("^over-query-limit$");
+    private static final Pattern ZERO_RESULTS_PATTERN = Pattern.compile("^zero-results$");
     private static final Pattern INSERT_WAYPOINTS_PATTERN = Pattern.compile("^(Insert-All-Waypoints|Insert-Only-Turnpoints): (-?\\d+)/(.*)$");
 
     boolean processCallback(String callback) {
@@ -1236,6 +1272,13 @@ public abstract class BaseMapView implements MapView {
         if (overQueryLimitMatcher.matches()) {
             overQueryLimitCount++;
             log.warning("Google Directions API is over query limit, count: " + overQueryLimitCount);
+            return true;
+        }
+
+        Matcher zeroResultsMatcher = ZERO_RESULTS_PATTERN.matcher(callback);
+        if (zeroResultsMatcher.matches()) {
+            zeroResultsCount++;
+            log.warning("Google Directions API returns zero results, count: " + zeroResultsCount);
             return true;
         }
 
@@ -1398,28 +1441,17 @@ public abstract class BaseMapView implements MapView {
         }
     }
 
-    @SuppressWarnings({"unchecked"})
     private void complementPositions(int row, BaseRoute route) {
-        List<NavigationPosition> positions = route.getPositions();
-        int index = row;
-        for (NavigationPosition position : positions) {
-            // do not complement description since this is limited to 2500 calls/day
-            // mapViewCallback.complementDescription(index, position.getLongitude(), position.getLatitude());
-            mapViewCallback.complementElevation(index, position.getLongitude(), position.getLatitude());
-            mapViewCallback.complementTime(index, position.getTime(), false);
-            index++;
-        }
+        int[] rows = asRange(row, row + route.getPositions().size());
+        // do not complement description since this is limited to 2500 calls/day
+        mapViewCallback.complementData(rows, false, true, true);
     }
 
     private void insertPosition(int row, Double longitude, Double latitude) {
         positionsModel.add(row, longitude, latitude, null, null, null, mapViewCallback.createDescription(positionsModel.getRowCount() + 1, null));
-        positionsSelectionModel.setSelectedPositions(new int[]{row}, true);
-
-        boolean complementTimeFallback = preferences.getBoolean(COMPLEMENT_TIME_FALLBACK, true);
-
-        mapViewCallback.complementDescription(row, longitude, latitude);
-        mapViewCallback.complementElevation(row, longitude, latitude);
-        mapViewCallback.complementTime(row, null, complementTimeFallback);
+        int[] rows = new int[]{row};
+        positionsSelectionModel.setSelectedPositions(rows, true);
+        mapViewCallback.complementData(rows, true, true, true);
     }
 
     private int getAddRow() {
@@ -1449,7 +1481,6 @@ public abstract class BaseMapView implements MapView {
         boolean complementElevation = preferences.getBoolean(COMPLEMENT_ELEVATION_ON_MOVE_PREFERENCE, true);
         boolean cleanTime = preferences.getBoolean(CLEAN_TIME_ON_MOVE_PREFERENCE, false);
         boolean complementTime = preferences.getBoolean(COMPLEMENT_TIME_ON_MOVE_PREFERENCE, true);
-        boolean complementTimeFallback = preferences.getBoolean(COMPLEMENT_TIME_FALLBACK, true);
 
         int minimum = row;
         for (int index : selectedPositionIndices) {
@@ -1464,22 +1495,20 @@ public abstract class BaseMapView implements MapView {
                 if (!moveCompleteSelection)
                     continue;
 
-                positionsModel.edit(index, LONGITUDE_COLUMN_INDEX, position.getLongitude() + diffLongitude,
-                        LATITUDE_COLUMN_INDEX, position.getLatitude() + diffLatitude, false, true);
+                positionsModel.edit(index, new PositionColumnValues(asList(LONGITUDE_COLUMN_INDEX, LATITUDE_COLUMN_INDEX),
+                                Arrays.<Object>asList( position.getLongitude() + diffLongitude, position.getLatitude() + diffLatitude)), false, true);
             } else {
-                positionsModel.edit(index, LONGITUDE_COLUMN_INDEX, longitude,
-                        LATITUDE_COLUMN_INDEX, latitude, false, true);
+                positionsModel.edit(index, new PositionColumnValues(asList(LONGITUDE_COLUMN_INDEX, LATITUDE_COLUMN_INDEX),
+                        Arrays.<Object>asList(longitude, latitude)), false, true);
             }
 
-            if (cleanElevation)
-                positionsModel.edit(index, ELEVATION_COLUMN_INDEX, null, -1, null, false, false);
-            if (complementElevation)
-                mapViewCallback.complementElevation(row, position.getLongitude(), position.getLatitude());
-
             if (cleanTime)
-                positionsModel.edit(index, DATE_TIME_COLUMN_INDEX, null, -1, null, false, false);
-            if (complementTime)
-                mapViewCallback.complementTime(index, null, complementTimeFallback);
+                positionsModel.edit(index, new PositionColumnValues(DATE_TIME_COLUMN_INDEX, null), false, false);
+            if (cleanElevation)
+                positionsModel.edit(index, new PositionColumnValues(ELEVATION_COLUMN_INDEX, null), false, false);
+
+            if (complementTime || complementElevation)
+                mapViewCallback.complementData(new int[]{index}, false, complementTime, complementElevation);
         }
 
         // updating all rows behind the modified is quite expensive, but necessary due to the distance
